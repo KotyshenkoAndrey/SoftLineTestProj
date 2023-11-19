@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  softlinetestproj_postgresql:
+    image: postgres:14.1
+
+  softlinetestproj:
+    image: ${DOCKER_REGISTRY-}softlinetestproj
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
