@@ -1,4 +1,4 @@
-namespace SoftLineTestProj
+namespace WebApplication2
 {
     public class WeatherForecast
     {

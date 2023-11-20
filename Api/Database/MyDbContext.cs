@@ -11,12 +11,14 @@ namespace SoftLineTestProj.Database
 {
     public class MyDbContext : DbContext
     {
-        public MyDbContext()
-        {
+        public MyDbContext(DbContextOptions options) : base(options) { }
 
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
-        }
+        //public MyDbContext()
+        //{
+
+        //    Database.EnsureDeleted();
+        //    Database.EnsureCreated();
+        //}
 
         public DbSet<TaskDb> TaskDb { get; set; }
         public DbSet<Status> Status { get; set; }
@@ -36,15 +38,13 @@ namespace SoftLineTestProj.Database
             .HasOne(t => t.Status)
             .WithMany()
             .HasForeignKey(t => t.Status_ID);
+//            InitDb();
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        private void InitDb()
         {
-
-        }
-
-        internal void InitDb()
-        {
+            Database.EnsureDeleted();
+            Database.EnsureCreated();
             if (Status.Any())
                 return;
             var a1 = new Status()

@@ -21,10 +21,10 @@ services.AddAppVersioning();
 services.AddAppSwagger(mainSettings, swaggerSettings);
 services.AddDbContext<MyDbContext>(opt=> opt.UseNpgsql(settings.ConnectionString));
 
-using (var context = new MyDbContext())
-{
-    context.InitDb();
-}
+//using (var context = new MyDbContext())
+//{
+//    context.InitDb();
+//}
 
 services.AddRazorPages();
 services.AddControllers().AddNewtonsoftJson();
