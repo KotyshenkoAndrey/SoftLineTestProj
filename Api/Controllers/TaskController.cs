@@ -24,28 +24,38 @@ public class TaskController : ControllerBase
     /// Get all task
     /// </summary>
     /// <returns> List<TaskDb></returns>
-    [HttpGet]
-    public async Task<IEnumerable<TaskDb>> GefAllTask()
+    [HttpGet("/getTask")]
+    public async Task<IEnumerable<TaskDb>> GetAllTask()
     {
         var tasks = await _context.TaskDb.Include(t => t.Status).ToListAsync();
         return tasks;
     }
-
-    [HttpPost]
-    public async Task<TaskDb> addTask(string taskName, string? description, int Id)
+    [HttpGet("/getStatus")]
+    public async Task<IEnumerable<Status>> GetAllStatus()
     {
-        var a = new TaskDb()
-        {
-            Name = taskName,
-            Description = description,
-            Status_ID = Id
-        };
-        _context.TaskDb.Add(a);
-        await _context.SaveChangesAsync();
-        return a;
+        var tasks = await _context.Status.ToListAsync();
+        return tasks;
     }
 
-    [HttpDelete]
+    [HttpPost("/addTask")]
+    public async Task<IActionResult> addTask([FromBody] TaskModel taskModel)
+    {
+        if (ModelState.IsValid)
+        {
+            var task = new TaskDb()
+            {
+                Name = taskModel.taskName,
+                Description = taskModel.description,
+                Status_ID = taskModel.statusId
+            };
+            _context.TaskDb.Add(task);
+            await _context.SaveChangesAsync();
+            return Ok(task);
+        }
+        return BadRequest(ModelState); 
+    }
+
+    [HttpDelete("/deleteTask")]
     public async Task<TaskDb> deleteTask(string taskName)
     {
         var objDel = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
@@ -56,7 +66,7 @@ public class TaskController : ControllerBase
         }
         return objDel;
     }
-    [HttpPut]
+    [HttpPut("/editTask")]
     public async Task<TaskDb> editTask(string taskName, string newTaskName)
     {
 

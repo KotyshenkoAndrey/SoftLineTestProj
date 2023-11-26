@@ -4,6 +4,6 @@
         <name>SoftLineTestProj</name>
     </assembly>
     <members>
-        <!-- Badly formed XML comment ignored for member "M:SoftLineTestProj.Controllers.TaskController.GefAllTask" -->
+        <!-- Badly formed XML comment ignored for member "M:SoftLineTestProj.Controllers.TaskController.GetAllTask" -->
     </members>
 </doc>

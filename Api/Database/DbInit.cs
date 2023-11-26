@@ -15,7 +15,7 @@ namespace SoftLineTestProj.Database
             ArgumentNullException.ThrowIfNull(context);
 
             var ii = context.Database.CanConnect();
-            context.Database.EnsureDeleted();
+            //context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
             if (context.Status.Any())
                 return;

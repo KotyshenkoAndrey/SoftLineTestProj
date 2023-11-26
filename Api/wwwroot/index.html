@@ -1,118 +1,168 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <title>Управление задачами</title>
-
+    <title>Задачи</title>
     <style>
-        .selected {
-            background-color: lightgray;
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1>Управление задачами</h1>
-        <table id="tasksTable" class="table">
-            <thead>
-                <tr>
-                    <th scope="col">Наименование</th>
-                    <th scope="col">Описание</th>
-                    <th scope="col">Статус</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Тут будут отображаться данные задач -->
-            </tbody>
-        </table>
-        <form id="taskForm">
-            <input type="text" id="taskName" placeholder="Наименование" required>
-            <input type="text" id="taskDescription" placeholder="Описание">
-            <input type="number" id="taskStatus" placeholder="Статус" required>
-            <button type="button" id="addButton" class="btn btn-primary mr-2">Добавить</button>
-            <button type="button" id="editButton" class="btn btn-secondary mr-2" disabled>Редактировать</button>
-            <button type="button" id="deleteButton" class="btn btn-danger" disabled>Удалить</button>
-        </form>
+    <h1>Задачи</h1>
+    <button onclick="openAddForm()">Добавить</button>
+    <button onclick="deleteTask()">Удалить</button>
+    <button onclick="openEditForm()">Редактировать</button>
+
+    <table id="tasksTable">
+        <tr>
+            <th>Наименование</th>
+            <th>Описание</th>
+            <th>Статус</th>
+        </tr>
+    </table>
+
+    <div id="addEditForm" style="display: none;">
+        <input type="text" id="nameInput" placeholder="Наименование">
+        <input type="text" id="descriptionInput" placeholder="Описание">
+        <select id="statusSelect">
+        </select>
+        <button onclick="addOrUpdateTask()">Добавить/Обновить</button>
     </div>
 
     <script>
-        function addTask(taskName, taskDescription, taskStatus) {
+        document.addEventListener("DOMContentLoaded", function () {
+            loadTasks();
+        });
 
-            $.ajax({
-                type: 'POST',
-                url: '/Task/addTask',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({
-                    name: taskName,
-                    description: taskDescription,
-                    status: taskStatus
+        function loadTasks() {
+            const tasksTable = document.getElementById('tasksTable');
+            tasksTable.innerHTML = "";
+            fetch('http://localhost:5217/getTask')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tasksTable = document.getElementById('tasksTable');
+                    data.forEach(task => {
+                        const row = tasksTable.insertRow(-1);
+                        const nameCell = row.insertCell(0);
+                        const descriptionCell = row.insertCell(1);
+                        const statusCell = row.insertCell(2);
+                        nameCell.innerHTML = task.name;
+                        descriptionCell.innerHTML = task.description;
+                        statusCell.innerHTML = task.status.status_name;
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке задач:', error);
+                });
+
+            loadStatuses();
+        }
+
+        function loadStatuses() {
+            fetch('http://localhost:5217/getStatus')
+                .then(response => response.json())
+                .then(data => {
+                    const statusSelect = document.getElementById('statusSelect');
+                    statusSelect.innerHTML = '';
+                    data.forEach(status => {
+                        const option = document.createElement('option');
+                        option.text = status.status_name; 
+                        statusSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке статусов:', error);
+                });
+        }
+
+        function openAddForm() {
+            document.getElementById('addEditForm').style.display = 'block';
+        }
+
+        function openEditForm() {
+            document.getElementById('addEditForm').style.display = 'block';
+        }
+
+        function deleteTask() {
+            // Дополнительная логика для удаления задачи
+        }
+
+        function addOrUpdateTask() {
+            const name = document.getElementById('nameInput').value;
+            const description = document.getElementById('descriptionInput').value;
+            const status = document.getElementById('statusSelect').value;
+            let statusId;
+
+            switch (status) {
+                case "Создана":
+                    statusId = 1;
+                    break;
+                case "В работе":
+                    statusId = 2;
+                    break;
+                case "Завершена":
+                    statusId = 3;
+                    break;
+                default:
+                    statusId = 15;
+            }
+
+            console.log('Добавлена новая задача:', name);
+            console.log('Добавлена новая задача:', status);
+            console.log('Добавлена новая задача:', statusId);
+            const body = JSON.stringify({
+                taskName: name,
+                description: description,
+                statusId: statusId
+            })
+            console.error('Ошибка при добавлении задачи:', body);
+            
+
+            fetch('/addTask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskName: name,
+                    description: description,
+                    statusId: statusId
                 }),
-                success: function (response) {
-                    // Обработка успешного выполнения
-                    console.log(response);
-                },
-                error: function (error) {
-                    // Обработка ошибок
-                    console.error(error);
-                }
-            });
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Ошибка при добавлении задачи:', body);
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadTasks();
+                    console.log('Добавлена новая задача:', data);
+                })
+                .catch(error => {
+                    console.error('Ошибка при добавлении задачи:', error);
+                });
         }
-
-        function editTask(data) {
-            $.ajax({
-                type: 'PUT',
-                url: '/Task/editTask',
-                data: data,
-                success: function (response) {
-                    // Обработка успешного выполнения
-                    console.log(response);
-                },
-                error: function (error) {
-                    // Обработка ошибок
-                    console.error(error);
-                }
-            });
-        }
-
-        function deleteTask(data) {
-            $.ajax({
-                type: 'DELETE',
-                url: '/Task/deleteTask',
-                data: data,
-                success: function (response) {
-                    // Обработка успешного выполнения
-                    console.log(response);
-                },
-                error: function (error) {
-                    // Обработка ошибок
-                    console.error(error);
-                }
-            });
-        }
-
-        // Получаем ссылки на кнопки и форму
-        const taskForm = document.getElementById('taskForm');
-        const taskNameInput = document.getElementById('taskName');
-        const taskDescriptionInput = document.getElementById('taskDescription');
-        const taskStatusInput = document.getElementById('taskStatus');
-        const addButton = document.getElementById('addButton');
-        const editButton = document.getElementById('editButton');
-        const deleteButton = document.getElementById('deleteButton');
-
-        // Обработчики событий для кнопок
-        addButton.addEventListener('click', () => {
-            const data = {
-                taskName: taskNameInput.value,
-                description: taskDescriptionInput.value,
-                statusId: taskStatusInput.value
-        };
-        addTask(data);
-            });
-            // Добавьте обработчики для остальных кнопок и формы
-
     </script>
 </body>
 </html>
