@@ -41,28 +41,5 @@ namespace SoftLineTestProj.Database
 //            InitDb();
         }
 
-        private void InitDb()
-        {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
-            if (Status.Any())
-                return;
-            var a1 = new Status()
-            {
-                Status_name = "Создана",
-            };
-            Status.Add(a1);
-            var a2 = new Status()
-            {
-                Status_name = "В работе",
-            };
-            Status.Add(a2);
-            var a3 = new Status()
-            {
-                Status_name = "Завершена",
-            };
-            Status.Add(a3);
-            SaveChanges();
-        }
     }
 }

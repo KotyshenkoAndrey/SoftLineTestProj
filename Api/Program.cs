@@ -21,11 +21,6 @@ services.AddAppVersioning();
 services.AddAppSwagger(mainSettings, swaggerSettings);
 services.AddDbContext<MyDbContext>(opt=> opt.UseNpgsql(settings.ConnectionString));
 
-//using (var context = new MyDbContext())
-//{
-//    context.InitDb();
-//}
-
 services.AddRazorPages();
 services.AddControllers().AddNewtonsoftJson();
 
@@ -36,9 +31,11 @@ services
     ;
 
 var app = builder.Build();
-// Configure the HTTP request pipeline.
 app.UseAppSwagger();
+DbInit.Execute(app.Services);
+
 app.MapRazorPages();
 app.MapControllers();
+app.UseStaticFiles();
 
 app.Run();

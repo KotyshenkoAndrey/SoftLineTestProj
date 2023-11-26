@@ -6,38 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftLineTestProj.Database;
 using SoftLineTestProj.Database.Entities;
-using WebApplication2;
 
 namespace SoftLineTestProj.Controllers;
-
-//[ApiController]
-//[Route("[controller]")]
-//public class WeatherForecastController : ControllerBase
-//{
-//    private static readonly string[] Summaries = new[]
-//    {
-//    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-//};
-
-//    private readonly ILogger<WeatherForecastController> _logger;
-
-//    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-//    {
-//        _logger = logger;
-//    }
-
-//[HttpGet]
-//public IEnumerable<WeatherForecast> Get()
-//{
-//    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-//    {
-//        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//        TemperatureC = Random.Shared.Next(-20, 55),
-//        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-//    })
-//    .ToArray();
-//}
-//    }
 
 [ApiController]
 [Route("[controller]")]
@@ -55,14 +25,14 @@ public class TaskController : ControllerBase
     /// </summary>
     /// <returns> List<TaskDb></returns>
     [HttpGet]
-    public List<TaskDb> GefAllTask()
+    public async Task<IEnumerable<TaskDb>> GefAllTask()
     {
-        var tasks = _context.TaskDb.Include(t => t.Status).ToList();
+        var tasks = await _context.TaskDb.Include(t => t.Status).ToListAsync();
         return tasks;
     }
 
     [HttpPost]
-    public void addTask(string taskName, string? description, int Id)
+    public async Task<TaskDb> addTask(string taskName, string? description, int Id)
     {
         var a = new TaskDb()
         {
@@ -71,29 +41,31 @@ public class TaskController : ControllerBase
             Status_ID = Id
         };
         _context.TaskDb.Add(a);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
+        return a;
     }
 
     [HttpDelete]
-    public void deleteTask(string taskName)
+    public async Task<TaskDb> deleteTask(string taskName)
     {
         var objDel = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
         if (objDel != null)
         {
             _context.TaskDb.Remove(objDel);
-            _context.SaveChanges();
-        }       
+            await _context.SaveChangesAsync();
+        }
+        return objDel;
     }
-    //[HttpPut]
-    //public void editTask(string taskName, string newTaskName)
-    //{
+    [HttpPut]
+    public async Task<TaskDb> editTask(string taskName, string newTaskName)
+    {
 
-    //    var objEdit = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
-    //    if(objEdit != null)
-    //    {
-    //        objEdit.Name = newTaskName;
-    //    }
-    //    _context.Update(objEdit);
-    //    _context.SaveChanges();
-    //}
+        var objEdit = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
+        if (objEdit != null)
+        {
+            objEdit.Name = newTaskName;
+            await _context.SaveChangesAsync();
+        }
+        return objEdit;
+    }
 }

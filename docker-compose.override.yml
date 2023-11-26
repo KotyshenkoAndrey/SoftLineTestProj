@@ -17,9 +17,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "65048:80"
+      - "10000:80"
     networks:
       - shared_practice
+    env_file:
+      - env.api
 networks:
   shared_practice:
     name: practice

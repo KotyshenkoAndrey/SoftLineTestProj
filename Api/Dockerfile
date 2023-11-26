@@ -6,10 +6,10 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["SoftLineTestProj.csproj", "."]
-RUN dotnet restore "./SoftLineTestProj.csproj"
+COPY ["Api/SoftLineTestProj.csproj", "Api/"]
+RUN dotnet restore "Api/SoftLineTestProj.csproj"
 COPY . .
-WORKDIR "/src/."
+WORKDIR "/src/Api"
 RUN dotnet build "SoftLineTestProj.csproj" -c Release -o /app/build
 
 FROM build AS publish
