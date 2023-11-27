@@ -1,11 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using SoftLineTestProj.Settings;
-using System;
 using SoftLineTestProj.Database;
-using Microsoft.Extensions.Configuration;
-using System.Runtime;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -7,7 +7,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=Passw0rd
      ports:
-      - "35432:5432"
+      - "5432:5432"
      networks:
       - shared_practice
      volumes:      

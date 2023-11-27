@@ -24,8 +24,8 @@
 <body>
     <h1>Задачи</h1>
     <button onclick="openAddForm()">Добавить</button>
-    <button onclick="deleteTask()">Удалить</button>
-    <button onclick="openEditForm()">Редактировать</button>
+    <button onclick="deleteSelectedTasks()">Удалить</button>
+    <button onclick="openEditForm()">Редактировать выбранные</button>
 
     <table id="tasksTable">
         <tr>
@@ -43,6 +43,13 @@
         <button onclick="addOrUpdateTask()">Добавить/Обновить</button>
     </div>
 
+    <div id="editForm" style="display: none;">
+        <input type="text" id="editNameInput" placeholder="Наименование">
+        <input type="text" id="editDescriptionInput" placeholder="Описание">
+        <select id="editStatusSelect"></select>
+        <button onclick="updateSelectedTask()">Обновить</button>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             loadTasks();
@@ -50,7 +57,7 @@
 
         function loadTasks() {
             const tasksTable = document.getElementById('tasksTable');
-            tasksTable.innerHTML = "";
+            tasksTable.innerHTML = "<tr><th></th><th>Наименование задачи</th><th>Описание задачи</th><th>Статус задачи</th></tr>";
             fetch('http://localhost:5217/getTask')
                 .then(response => {
                     if (!response.ok) {
@@ -59,12 +66,15 @@
                     return response.json();
                 })
                 .then(data => {
-                    const tasksTable = document.getElementById('tasksTable');
                     data.forEach(task => {
                         const row = tasksTable.insertRow(-1);
-                        const nameCell = row.insertCell(0);
-                        const descriptionCell = row.insertCell(1);
-                        const statusCell = row.insertCell(2);
+                        const checkboxCell = row.insertCell(0);
+                        const nameCell = row.insertCell(1);
+                        const descriptionCell = row.insertCell(2);
+                        const statusCell = row.insertCell(3);
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkboxCell.appendChild(checkbox);
                         nameCell.innerHTML = task.name;
                         descriptionCell.innerHTML = task.description;
                         statusCell.innerHTML = task.status.status_name;
@@ -85,7 +95,7 @@
                     statusSelect.innerHTML = '';
                     data.forEach(status => {
                         const option = document.createElement('option');
-                        option.text = status.status_name; 
+                        option.text = status.status_name;
                         statusSelect.appendChild(option);
                     });
                 })
@@ -99,43 +109,153 @@
         }
 
         function openEditForm() {
-            document.getElementById('addEditForm').style.display = 'block';
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length !== 1) {
+                alert('Выберите одну запись для редактирования');
+                return;
+            }
+            const row = checkboxes[0].parentNode.parentNode;
+            const name = row.cells[1].innerHTML;
+            const description = row.cells[2].innerHTML;
+            const currentStatus = row.cells[3].innerHTML;
+            document.getElementById('editNameInput').value = name;
+            document.getElementById('editDescriptionInput').value = description;
+
+            fetch('http://localhost:5217/getStatus')
+                .then(response => response.json())
+                .then(data => {
+                    const editStatusSelect = document.getElementById('editStatusSelect');
+                    editStatusSelect.innerHTML = '';
+                    data.forEach(status => {
+                        const option = document.createElement('option');
+                        option.text = status.status_name;
+                        console.log('first', status.status_name);
+                        console.log('second',status);
+
+                        if (status.status_name === currentStatus) {
+                            option.selected = true;
+                        }
+                        editStatusSelect.appendChild(option);
+
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке статусов:', error);
+                });
+            document.getElementById('editForm').style.display = 'block';
         }
 
-        function deleteTask() {
-            // Дополнительная логика для удаления задачи
+        function updateSelectedTask() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length !== 1) {
+                alert('Выберите одну запись для редактирования');
+                return;
+            }
+            const row = checkboxes[0].parentNode.parentNode;
+            const currentTaskName = row.cells[1].innerHTML;
+            const currentDescription = row.cells[2].innerHTML;
+            const currentStatus = row.cells[3].innerHTML;
+            const newTaskName = document.getElementById('editNameInput').value;
+            const newDescription = document.getElementById('editDescriptionInput').value;
+            const newStatus = document.getElementById('editStatusSelect').value;
+
+            fetch('/editTask', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    currentTaskName: currentTaskName,
+                    currentTaskNameDescription: currentDescription,
+                    currentTaskNameStatusId: getStatusIdByStatusName(currentStatus),
+                    newTaskName: newTaskName,
+                    newDescription: newDescription,
+                    newStatusId: getStatusIdByStatusName(newStatus)
+                }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка при обновлении задачи');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadTasks();
+                    console.log('Задача успешно обновлена:', data);
+                    
+                })
+                .catch(error => {
+                    console.error('Ошибка при обновлении задачи:', error);
+                });
+
+            document.getElementById('editForm').style.display = 'none';
         }
 
+        function deleteSelectedTasks() {
+            const tasksTable = document.getElementById('tasksTable');
+            const checkboxes = tasksTable.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Выберите записи для удаления');
+                return;
+            }
+
+            if (confirm('Вы уверены, что хотите удалить выбранные записи?')) {
+                checkboxes.forEach(checkbox => {
+                    const row = checkbox.parentNode.parentNode; 
+                    tasksTable.deleteRow(row.rowIndex); 
+                    const taskName = row.cells[1].innerHTML; 
+                    const description = row.cells[2].innerHTML;
+                    const status = row.cells[3].innerHTML;
+                    const statusId = getStatusIdByStatusName(status);
+
+                    fetch('/deleteTask', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            taskName: taskName,
+                            description: description,
+                            statusId: statusId
+                        }),
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Ошибка при удалении задачи');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Задача успешно удалена из базы данных:', data);
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при удалении задачи:', error);
+                        });
+                });
+            }
+        }
+
+        function getStatusIdByStatusName(statusName) {
+            switch (statusName) {
+                case "Создана":
+                    return 1;
+                case "В работе":
+                    return 2;
+                case "Завершена":
+                    return 3;
+                default:
+                    return 15;
+            }
+        }
         function addOrUpdateTask() {
             const name = document.getElementById('nameInput').value;
             const description = document.getElementById('descriptionInput').value;
             const status = document.getElementById('statusSelect').value;
-            let statusId;
+            let statusId = getStatusIdByStatusName(status);
+            console.log('name:', name);
+            console.log('status:', status);
+            console.log('statusId:', statusId);
 
-            switch (status) {
-                case "Создана":
-                    statusId = 1;
-                    break;
-                case "В работе":
-                    statusId = 2;
-                    break;
-                case "Завершена":
-                    statusId = 3;
-                    break;
-                default:
-                    statusId = 15;
-            }
-
-            console.log('Добавлена новая задача:', name);
-            console.log('Добавлена новая задача:', status);
-            console.log('Добавлена новая задача:', statusId);
-            const body = JSON.stringify({
-                taskName: name,
-                description: description,
-                statusId: statusId
-            })
-            console.error('Ошибка при добавлении задачи:', body);
-            
 
             fetch('/addTask', {
                 method: 'POST',

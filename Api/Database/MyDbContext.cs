@@ -1,24 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SoftLineTestProj.Database.Entities;
-using SoftLineTestProj.Settings;
 using TaskDb = SoftLineTestProj.Database.Entities.TaskDb;
-using SettingsDB = SoftLineTestProj.Settings.Settings;
 
 namespace SoftLineTestProj.Database
 {
     public class MyDbContext : DbContext
     {
         public MyDbContext(DbContextOptions options) : base(options) { }
-
-        //public MyDbContext()
-        //{
-
-        //    Database.EnsureDeleted();
-        //    Database.EnsureCreated();
-        //}
 
         public DbSet<TaskDb> TaskDb { get; set; }
         public DbSet<Status> Status { get; set; }
@@ -38,7 +26,6 @@ namespace SoftLineTestProj.Database
             .HasOne(t => t.Status)
             .WithMany()
             .HasForeignKey(t => t.Status_ID);
-//            InitDb();
         }
 
     }

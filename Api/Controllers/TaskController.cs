@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftLineTestProj.Database;
@@ -56,9 +52,9 @@ public class TaskController : ControllerBase
     }
 
     [HttpDelete("/deleteTask")]
-    public async Task<TaskDb> deleteTask(string taskName)
+    public async Task<TaskDb> deleteTask([FromBody] TaskModel taskModel)
     {
-        var objDel = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
+        var objDel = _context.TaskDb.Where(t => t.Name == taskModel.taskName).FirstOrDefault();
         if (objDel != null)
         {
             _context.TaskDb.Remove(objDel);
@@ -67,13 +63,18 @@ public class TaskController : ControllerBase
         return objDel;
     }
     [HttpPut("/editTask")]
-    public async Task<TaskDb> editTask(string taskName, string newTaskName)
+    public async Task<TaskDb> editTask([FromBody] TaskModelUpdate taskModel)
     {
 
-        var objEdit = _context.TaskDb.Where(t => t.Name == taskName).FirstOrDefault();
+        var objEdit = _context.TaskDb.Where(t => t.Name == taskModel.CurrentTaskName &&
+                                            t.Description == taskModel.CurrentTaskNameDescription &&
+                                            t.Status_ID == taskModel.CurrentTaskNameStatusId).FirstOrDefault();
         if (objEdit != null)
         {
-            objEdit.Name = newTaskName;
+            objEdit.Name = taskModel.newTaskName;
+            objEdit.Description = taskModel.newDescription;
+            objEdit.Status_ID = taskModel.newStatusId;
+
             await _context.SaveChangesAsync();
         }
         return objEdit;
